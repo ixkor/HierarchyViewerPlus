@@ -1,0 +1,20 @@
+# Java class files
+*.class
+
+# generated files
+bin/
+gen/
+out/
+
+# Eclipse Metadata
+.metadata/
+
+# Mac OS X clutter
+*.DS_Store
+
+# Windows clutter
+Thumbs.db
+
+# Intellij IDEA (see https://intellij-support.jetbrains.com/entries/23393067)
+.idea
+
