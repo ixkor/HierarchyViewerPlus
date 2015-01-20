@@ -1,4 +1,4 @@
-package net.xkor.hiararchyviewerplus.sample;
+package net.xkor.hierarchyviewerplus.library;
 
 import android.app.Application;
 import android.test.ApplicationTestCase;

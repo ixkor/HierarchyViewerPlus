@@ -1,11 +1,17 @@
-package net.xkor.hiararchyviewerplus.sample;
+package net.xkor.hierarchyviewerplus.sample;
 
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.os.Environment;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import net.xkor.hiararchyviewerplus.library.ViewScanner;
+import net.xkor.hierarchyviewerplus.library.ViewScanner;
+
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -32,7 +38,15 @@ public class MainActivity extends ActionBarActivity {
         int id = item.getItemId();
 
         if (id == R.id.action_settings) {
-            new ViewScanner().scan(findViewById(android.R.id.content));
+            try {
+                OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(
+                        Environment.getExternalStorageDirectory().toString() + "/HierarchyViewerPlus.zip"));
+                new ViewScanner().scanHierarchy(findViewById(android.R.id.content).getRootView(), outputStream);
+                outputStream.flush();
+                outputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             return true;
         }
 
