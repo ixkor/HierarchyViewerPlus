@@ -11,5 +11,6 @@
     <orderEntry type="library" name="j3dutils" level="project" />
     <orderEntry type="library" name="vecmath" level="project" />
     <orderEntry type="library" name="amd64" level="project" />
+    <orderEntry type="library" name="gson-2.3" level="project" />
   </component>
 </module>

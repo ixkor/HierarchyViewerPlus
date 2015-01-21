@@ -39,6 +39,9 @@ public class ViewScanner {
         zipOutputStream.putNextEntry(entry);
         zipOutputStream.write(new Gson().toJson(scanResult).getBytes());
         zipOutputStream.closeEntry();
+
+        zipOutputStream.flush();
+        zipOutputStream.close();
     }
 
     private ScanResult scan(View view, ZipOutputStream zipOutputStream) throws IOException {
@@ -134,7 +137,9 @@ public class ViewScanner {
             this.type = view.getClass().getName();
             this.imageName = imageName;
             this.rect = new Rect();
-            view.getDrawingRect(this.rect);
+//            view.getDrawingRect(this.rect);
+            view.getGlobalVisibleRect(this.rect);
+//            view.getLocalVisibleRect(this.rect);
             this.childs = childs;
         }
     }

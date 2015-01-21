@@ -42,8 +42,8 @@ public class MainActivity extends ActionBarActivity {
                 OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(
                         Environment.getExternalStorageDirectory().toString() + "/HierarchyViewerPlus.zip"));
                 new ViewScanner().scanHierarchy(findViewById(android.R.id.content).getRootView(), outputStream);
-                outputStream.flush();
-                outputStream.close();
+//                outputStream.flush();
+//                outputStream.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
