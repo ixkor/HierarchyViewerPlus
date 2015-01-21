@@ -10,6 +10,7 @@ import javax.media.j3d.*;
 import javax.swing.*;
 import javax.vecmath.Point3d;
 import javax.vecmath.Point3f;
+import javax.vecmath.TexCoord2f;
 import javax.vecmath.Vector3f;
 import java.awt.*;
 import java.io.IOException;
@@ -86,26 +87,32 @@ public class MainForm {
         loadView(layers, zipFile, childGroup);
     }
 
-    private void loadView(ScanResult scanResult, ZipFile zipFile, TransformGroup group) throws IOException {
+    private void loadView(ScanResult scanResult, ZipFile zipFile, Group group) throws IOException {
         Appearance appearance = createTexture(scanResult.getImageName(), zipFile);
         Rect rect = scanResult.getRect();
 
-        QuadArray plane = new QuadArray(4, QuadArray.COORDINATES | GeometryArray.COLOR_4);
+        QuadArray plane = new QuadArray(4, QuadArray.COORDINATES | GeometryArray.TEXTURE_COORDINATE_2);
         plane.setCoordinate(0, new Point3f(rect.left / mul, -rect.top / mul, 0f));
         plane.setCoordinate(1, new Point3f(rect.right / mul, -rect.top / mul, 0f));
         plane.setCoordinate(2, new Point3f(rect.right / mul, -rect.bottom / mul, 0f));
         plane.setCoordinate(3, new Point3f(rect.left / mul, -rect.bottom / mul, 0f));
+        plane.setTextureCoordinate(0, 0, new TexCoord2f(0f, 1f));
+        plane.setTextureCoordinate(0, 1, new TexCoord2f(1f, 1f));
+        plane.setTextureCoordinate(0, 2, new TexCoord2f(1f, 0f));
+        plane.setTextureCoordinate(0, 3, new TexCoord2f(0f, 0f));
 
         group.addChild(new Shape3D(plane, appearance));
 
         if (scanResult.getChilds() != null) {
             Transform3D transform = new Transform3D();
-            transform.setTranslation(new Vector3f(0f, 0f, 0.1f));
+            transform.setTranslation(new Vector3f(0f, 0f, 0.01f));
             TransformGroup childGroup = new TransformGroup(transform);
+            OrderedGroup orderedGroup = new OrderedGroup();
             group.addChild(childGroup);
+            childGroup.addChild(orderedGroup);
 
             for (ScanResult childScanResult : scanResult.getChilds())
-                loadView(childScanResult, zipFile, childGroup);
+                loadView(childScanResult, zipFile, orderedGroup);
         }
     }
 
@@ -114,8 +121,9 @@ public class MainForm {
         if (sourceImage == null)
             System.out.println("Image could not be loaded from " + fileName);
 
-        TextureLoader loader = new TextureLoader(sourceImage, "RGBA", this.mainPanel);
+        TextureLoader loader = new TextureLoader(sourceImage, "RGBA", this.mainPanel.getRootPane());
         ImageComponent2D image = loader.getImage();
+//        Texture texture = loader.getTexture();
 
         if (image == null)
             System.out.println("Texture could not be loaded from " + fileName);
@@ -129,15 +137,15 @@ public class MainForm {
         Appearance appearance = new Appearance();
         PolygonAttributes polyAttributes = new PolygonAttributes(PolygonAttributes.POLYGON_FILL, PolygonAttributes.CULL_NONE, 0f);
         appearance.setPolygonAttributes(polyAttributes);
-        appearance.setTexture(texture);
 
         TextureAttributes textureAttributes = new TextureAttributes();
-        textureAttributes.setTextureMode(TextureAttributes.REPLACE);
+        textureAttributes.setTextureMode(TextureAttributes.MODULATE);
         appearance.setTextureAttributes(textureAttributes);
 
-//        TransparencyAttributes transparencyAttributes = new TransparencyAttributes(TransparencyAttributes.BLENDED, 1f);
-        TransparencyAttributes transparencyAttributes = new TransparencyAttributes(TransparencyAttributes.NONE, 0f);
+        TransparencyAttributes transparencyAttributes = new TransparencyAttributes(TransparencyAttributes.BLENDED, 0f);
         appearance.setTransparencyAttributes(transparencyAttributes);
+
+        appearance.setTexture(texture);
 
         return appearance;
     }
