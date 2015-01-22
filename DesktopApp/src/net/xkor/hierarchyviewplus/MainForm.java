@@ -2,6 +2,7 @@ package net.xkor.hierarchyviewplus;
 
 import com.google.gson.Gson;
 import com.sun.j3d.exp.swing.JCanvas3D;
+import com.sun.j3d.utils.behaviors.mouse.MouseRotate;
 import com.sun.j3d.utils.image.TextureLoader;
 import com.sun.j3d.utils.universe.SimpleUniverse;
 
@@ -30,6 +31,7 @@ public class MainForm {
     private JButton button1;
     private JPanel container;
     private SimpleUniverse universe;
+    private float level;
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("MainForm");
@@ -44,12 +46,14 @@ public class MainForm {
 
     private void createScene() {
         universe = new SimpleUniverse(c3d.getOffscreenCanvas3D());
+        c3d =
 
         BranchGroup branch = new BranchGroup();
 
         // Make a changeable 3D transform
         TransformGroup trans = new TransformGroup();
         trans.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
+        trans.setCapability(TransformGroup.ALLOW_TRANSFORM_READ);
         branch.addChild(trans);
 
         // Make a shape
@@ -57,10 +61,14 @@ public class MainForm {
 //        trans.addChild(demo);
 
         // Make a behavor to spin the shape
-        Alpha spinAlpha = new Alpha(-1, 40000);
-        RotationInterpolator spinner = new RotationInterpolator(spinAlpha, trans);
-        spinner.setSchedulingBounds(new BoundingSphere(new Point3d(), 1000.0));
-        trans.addChild(spinner);
+//        Alpha spinAlpha = new Alpha(-1, 40000);
+//        RotationInterpolator spinner = new RotationInterpolator(spinAlpha, trans);
+//        spinner.setSchedulingBounds(new BoundingSphere(new Point3d(), 1000.0));
+//        trans.addChild(spinner);
+
+        MouseRotate myMouseRotate = new MouseRotate(c3d, trans);
+        myMouseRotate.setSchedulingBounds(new BoundingPolytope());
+        branch.addChild(myMouseRotate);
 
         try {
             loadHierarchy(trans);
@@ -73,6 +81,7 @@ public class MainForm {
 //        universe.getViewer().getView().setDepthBufferFreezeTransparent(false);
 //        universe.getViewer().getView().setTransparencySortingPolicy(View.TRANSPARENCY_SORT_GEOMETRY);
         universe.getViewer().getView().setProjectionPolicy(View.PARALLEL_PROJECTION);
+        universe.getViewer().getView().setSceneAntialiasingEnable(true);
         universe.addBranchGraph(branch);
     }
 
@@ -93,8 +102,6 @@ public class MainForm {
         loadView(layers, zipFile, orderedGroup);
     }
 
-    private float level;
-
     private void loadView(ScanResult scanResult, ZipFile zipFile, Group group) throws IOException {
         Appearance appearance = createTexture(scanResult.getImageName(), zipFile);
         Rect rect = scanResult.getRect();
@@ -111,6 +118,14 @@ public class MainForm {
 
         group.addChild(new Shape3D(plane, appearance));
 
+        plane = new QuadArray(4, QuadArray.COORDINATES);
+        plane.setCoordinate(0, new Point3f(rect.left / mul, -rect.top / mul, level));
+        plane.setCoordinate(1, new Point3f(rect.right / mul, -rect.top / mul, level));
+        plane.setCoordinate(2, new Point3f(rect.right / mul, -rect.bottom / mul, level));
+        plane.setCoordinate(3, new Point3f(rect.left / mul, -rect.bottom / mul, level));
+
+        group.addChild(new Shape3D(plane, createColor()));
+
         if (scanResult.getChilds() != null) {
 //            Transform3D transform = new Transform3D();
 //            transform.setTranslation(new Vector3f(0f, 0f, 0.01f));
@@ -123,6 +138,27 @@ public class MainForm {
                 loadView(childScanResult, zipFile, group);
             level -= 0.01f;
         }
+    }
+
+    private Appearance createColor() {
+        Appearance appearance = new Appearance();
+
+        PolygonAttributes polyAttributes = new PolygonAttributes(PolygonAttributes.POLYGON_LINE, PolygonAttributes.CULL_NONE, 0f);
+        appearance.setPolygonAttributes(polyAttributes);
+
+        LineAttributes lineAttributes = new LineAttributes();
+        lineAttributes.setLineAntialiasingEnable(true);
+        lineAttributes.setLineWidth(2f);
+        appearance.setLineAttributes(lineAttributes);
+
+        ColoringAttributes coloringAttributes = new ColoringAttributes();
+        coloringAttributes.setColor(1f, 0f, 0f);
+        appearance.setColoringAttributes(coloringAttributes);
+
+        TransparencyAttributes transparencyAttributes = new TransparencyAttributes(TransparencyAttributes.NICEST, 0f);
+        appearance.setTransparencyAttributes(transparencyAttributes);
+
+        return appearance;
     }
 
     private Appearance createTexture(String fileName, ZipFile zipFile) throws IOException {
