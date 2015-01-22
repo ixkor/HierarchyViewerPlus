@@ -70,6 +70,9 @@ public class MainForm {
 
         branch.compile();
         universe.getViewingPlatform().setNominalViewingTransform();
+//        universe.getViewer().getView().setDepthBufferFreezeTransparent(false);
+//        universe.getViewer().getView().setTransparencySortingPolicy(View.TRANSPARENCY_SORT_GEOMETRY);
+        universe.getViewer().getView().setProjectionPolicy(View.PARALLEL_PROJECTION);
         universe.addBranchGraph(branch);
     }
 
@@ -83,19 +86,24 @@ public class MainForm {
         transform.setTranslation(new Vector3f(-rect.right / mul / 2, rect.bottom / mul / 2, 0f));
         TransformGroup childGroup = new TransformGroup(transform);
         group.addChild(childGroup);
+        OrderedGroup orderedGroup = new OrderedGroup();
+        childGroup.addChild(orderedGroup);
 
-        loadView(layers, zipFile, childGroup);
+        level = 0f;
+        loadView(layers, zipFile, orderedGroup);
     }
+
+    private float level;
 
     private void loadView(ScanResult scanResult, ZipFile zipFile, Group group) throws IOException {
         Appearance appearance = createTexture(scanResult.getImageName(), zipFile);
         Rect rect = scanResult.getRect();
 
         QuadArray plane = new QuadArray(4, QuadArray.COORDINATES | GeometryArray.TEXTURE_COORDINATE_2);
-        plane.setCoordinate(0, new Point3f(rect.left / mul, -rect.top / mul, 0f));
-        plane.setCoordinate(1, new Point3f(rect.right / mul, -rect.top / mul, 0f));
-        plane.setCoordinate(2, new Point3f(rect.right / mul, -rect.bottom / mul, 0f));
-        plane.setCoordinate(3, new Point3f(rect.left / mul, -rect.bottom / mul, 0f));
+        plane.setCoordinate(0, new Point3f(rect.left / mul, -rect.top / mul, level));
+        plane.setCoordinate(1, new Point3f(rect.right / mul, -rect.top / mul, level));
+        plane.setCoordinate(2, new Point3f(rect.right / mul, -rect.bottom / mul, level));
+        plane.setCoordinate(3, new Point3f(rect.left / mul, -rect.bottom / mul, level));
         plane.setTextureCoordinate(0, 0, new TexCoord2f(0f, 1f));
         plane.setTextureCoordinate(0, 1, new TexCoord2f(1f, 1f));
         plane.setTextureCoordinate(0, 2, new TexCoord2f(1f, 0f));
@@ -104,15 +112,16 @@ public class MainForm {
         group.addChild(new Shape3D(plane, appearance));
 
         if (scanResult.getChilds() != null) {
-            Transform3D transform = new Transform3D();
-            transform.setTranslation(new Vector3f(0f, 0f, 0.01f));
-            TransformGroup childGroup = new TransformGroup(transform);
-            OrderedGroup orderedGroup = new OrderedGroup();
-            group.addChild(childGroup);
-            childGroup.addChild(orderedGroup);
-
+//            Transform3D transform = new Transform3D();
+//            transform.setTranslation(new Vector3f(0f, 0f, 0.01f));
+//            TransformGroup childGroup = new TransformGroup(transform);
+////            OrderedGroup orderedGroup = new OrderedGroup();
+//            group.addChild(childGroup);
+////            childGroup.addChild(orderedGroup);
+            level += 0.01f;
             for (ScanResult childScanResult : scanResult.getChilds())
-                loadView(childScanResult, zipFile, orderedGroup);
+                loadView(childScanResult, zipFile, group);
+            level -= 0.01f;
         }
     }
 
@@ -138,11 +147,18 @@ public class MainForm {
         PolygonAttributes polyAttributes = new PolygonAttributes(PolygonAttributes.POLYGON_FILL, PolygonAttributes.CULL_NONE, 0f);
         appearance.setPolygonAttributes(polyAttributes);
 
+//        RenderingAttributes renderAttribs = new RenderingAttributes();
+//        renderAttribs.setDepthBufferWriteEnable(true);
+//        appearance.setRenderingAttributes(renderAttribs);
+
         TextureAttributes textureAttributes = new TextureAttributes();
+//        textureAttributes.setTextureMode(TextureAttributes.COMBINE);
+//        textureAttributes.setCombineRgbMode(TextureAttributes.COMBINE_REPLACE);
+//        textureAttributes.setCombineAlphaScale(TextureAttributes.COMBINE_MODULATE);
         textureAttributes.setTextureMode(TextureAttributes.MODULATE);
         appearance.setTextureAttributes(textureAttributes);
 
-        TransparencyAttributes transparencyAttributes = new TransparencyAttributes(TransparencyAttributes.BLENDED, 0f);
+        TransparencyAttributes transparencyAttributes = new TransparencyAttributes(TransparencyAttributes.NICEST, 0f);
         appearance.setTransparencyAttributes(transparencyAttributes);
 
         appearance.setTexture(texture);
